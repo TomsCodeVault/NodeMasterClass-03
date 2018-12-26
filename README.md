@@ -1,7 +1,7 @@
-# NodeMasterClass-02
-Node.js Master Class Homework Assignment #2
+# NodeMasterClass-03
+Node.js Master Class Homework Assignment #3
 
-# Pizza Delivery API #
+# GUI for Pizza Delivery API #
 
 This api serves as the backend for a pizza delivery company. It allows users to be created, edited and deleted. Those users can add, remove and edit items from their shopping cart and then place an order by checking out. The api integrates with the stripe.com api and the mailgun api to accept payments and email receipts.
 
