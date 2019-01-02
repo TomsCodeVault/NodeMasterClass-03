@@ -147,7 +147,7 @@ app.bindForms = function(){
         // Call the API
         app.client.request(undefined,path,method,queryStringObject,payload,function(statusCode,responsePayload){
           // Display an error on the form if needed
-          if(statusCode !== 200){
+          if([200, 204].indexOf(statusCode) == -1){
 
             if(statusCode == 403){
               // log the user out
