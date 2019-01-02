@@ -22,6 +22,11 @@ body,p,h1,h2,h3,h4,h5,h6,div,span,header,footer,img,a,a:hover,a:active,a:visited
   height: 1px;
 }
 
+body {
+  height: 100%;
+  position: relative;
+}
+
 /* Main color palette */
 .header{
   background-color: #fff;
@@ -29,12 +34,13 @@ body,p,h1,h2,h3,h4,h5,h6,div,span,header,footer,img,a,a:hover,a:active,a:visited
   border-style: solid;
   border-color: #fff;
   box-shadow: 0 -25px 11px 20px #000;
-  position: fixed;
+  /* position: fixed;
   top: 0;
-  left: 0;
+  left: 0; */
   width: 100%;
   padding: 20px 0;
   min-width: 1200px;
+  overflow: auto;
 }
 
 .header ul{
@@ -78,9 +84,11 @@ body.loggedIn .header ul li.loggedOut{
 }
 
 .content {
-  margin-top: 150px;
+  /* margin-top: 150px; */
   width: 1000px;
-  margin: 150px auto;
+  /* margin: 150px auto; */
+  margin: 0 auto;
+  padding-top: 150px;
 }
 
 .footer{
@@ -91,6 +99,8 @@ body.loggedIn .header ul li.loggedOut{
   border-width: 1px 0 0 0;
   border-color: #fff;
   border-style: solid;
+  position:absolute;
+  bottom: 0;
 }
 
 .footer .copyright{
