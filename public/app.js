@@ -95,6 +95,17 @@ app.bindLogoutButton = function(){
   });
 };
 
+// Bind the add to cart button
+app.bindAddToCartButtons = function(){
+  var atcButtons = document.getElementById("menuListTable").querySelectorAll("#addToCartButton");
+  console.log(atcButtons.length);
+
+    // Stop if from redirecting
+  //e.preventDefault();
+
+    // Add item to cart
+}
+
 // Log the user out then redirect them
 app.logUserOut = function(redirectUser){
   // Set redirectUser to default to true
@@ -336,6 +347,10 @@ app.loadDataOnPage = function(){
   if(primaryClass == 'accountEdit'){
     app.loadAccountEditPage();
   }
+
+  if(primaryClass == 'menuList'){
+    app.loadMenuListPage();
+  }
 };
 
 // Load the account edit page specifically
@@ -364,6 +379,55 @@ app.loadAccountEditPage = function(){
 
       } else {
         // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
+        app.logUserOut();
+      }
+    });
+  } else {
+    app.logUserOut();
+  }
+};
+
+// Load the dashboard page specifically
+app.loadMenuListPage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  if(phone){
+    // Fetch the user data
+    var queryStringObject = {
+      'phone' : phone
+    };
+    app.client.request(undefined,'api/menu','GET',undefined,undefined,function(statusCode,responsePayload){
+      if(statusCode == 200){
+
+        // Determine how many checks the user has
+        var menu = typeof(responsePayload) == 'object' ? responsePayload : {};
+        var itemCounter = 0; // use to test for empty menu
+        // Show each menu item as a new row in the table
+        for(var key in menu){
+          if(menu.hasOwnProperty(key)){
+            itemCounter++;
+            var menuItem = menu[key];
+            // Create table row for each menu item
+            var table = document.getElementById("menuListTable");
+            var tr = table.insertRow(-1);
+            tr.classList.add('menuRow');
+            var td0 = tr.insertCell(0);
+            var td1 = tr.insertCell(1);
+            var td2 = tr.insertCell(2);
+            var td3 = tr.insertCell(3);
+            td0.innerHTML = menuItem['description'];
+            td1.innerHTML = menuItem['price'].toLocaleString("en-US", {style:"currency", currency:"USD"});
+            td2.innerHTML = 'Qty:<input type="number" name="quantity" class="menuQty" min="1" max="99" step="1" value="1" />';
+            td3.innerHTML = '<a href="#" id="addToCartButton">add to cart</a>';
+          }
+        }
+        if(itemCounter == 0){
+          // Show 'you have no checks' message
+          document.getElementById("noItemsMessage").style.display = 'block';
+        }
+        app.bindAddToCartButtons();
+      } else {
+        // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
         app.logUserOut();
       }
     });

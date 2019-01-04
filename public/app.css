@@ -296,16 +296,20 @@ td a, td a:hover, td a:active{
   cursor: pointer;
 }
 
+.menuQty {
+  width: 4em;
+}
+
 /* Page specific styles for dashboard */
 
-#noChecksMessage td{
+#noItemsMessage td{
   text-align: center;
   font-style: italic;
   font-size: 20px;
   padding: 20px;
 }
 
-#noChecksMessage{
+#noItemsMessage{
   display: none;
 }
 
