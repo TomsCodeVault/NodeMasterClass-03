@@ -96,7 +96,10 @@ app.bindLogoutButton = function(){
 };
 
 // Log the user out then redirect them
-app.logUserOut = function(){
+app.logUserOut = function(redirectUser){
+  // Set redirectUser to default to true
+  redirectUser = typeof(redirectUser) == 'boolean' ? redirectUser : true;
+
   // Get the current token id
   var tokenId = typeof(app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
 
@@ -109,7 +112,9 @@ app.logUserOut = function(){
     app.setSessionToken(false);
 
     // Send the user to the logged out page
-    window.location = '/session/deleted';
+    if(redirectUser){
+      window.location = '/session/deleted';
+    }
 
   });
 };
