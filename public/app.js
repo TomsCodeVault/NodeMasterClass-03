@@ -98,13 +98,28 @@ app.bindLogoutButton = function(){
 // Bind the add to cart button
 app.bindAddToCartButtons = function(){
   var atcButtons = document.getElementById("menuListTable").querySelectorAll("#addToCartButton");
-  console.log(atcButtons.length);
+
+  for(var i = 0; i < atcButtons.length; i++){
+    atcButtons[i].addEventListener("click", function(e){
+      // get the item number and quantity from other elements in the row
+      e.preventDefault();
+      var payloadObject = {
+        'phone' : e.currentTarget.parentElement.getAttribute("phone"),
+        'menuItemId' : e.currentTarget.parentElement.getAttribute("itemId"),
+        'quantity' : e.currentTarget.parentElement.parentElement.querySelector(".menuQty").value
+      };
+      app.client.request(undefined,'api/carts/items/add','PUT',undefined,payloadObject,function(statusCode,responsePayload){
+        console.log(statusCode);
+      });
+    });
+  }
+};
 
     // Stop if from redirecting
   //e.preventDefault();
 
     // Add item to cart
-}
+
 
 // Log the user out then redirect them
 app.logUserOut = function(redirectUser){
@@ -415,6 +430,8 @@ app.loadMenuListPage = function(){
             var td1 = tr.insertCell(1);
             var td2 = tr.insertCell(2);
             var td3 = tr.insertCell(3);
+            td3.setAttribute('itemId', menuItem['id']);
+            td3.setAttribute('phone', phone);
             td0.innerHTML = menuItem['description'];
             td1.innerHTML = menuItem['price'].toLocaleString("en-US", {style:"currency", currency:"USD"});
             td2.innerHTML = 'Qty:<input type="number" name="quantity" class="menuQty" min="1" max="99" step="1" value="1" />';
