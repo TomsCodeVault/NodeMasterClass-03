@@ -300,6 +300,14 @@ td a, td a:hover, td a:active{
   width: 4em;
 }
 
+.menuRow td {
+  border-bottom: 1pt solid black;
+}
+
+#menuListTable{
+  border-collapse: collapse;
+}
+
 /* Page specific styles for dashboard */
 
 #noItemsMessage td{
