@@ -109,17 +109,58 @@ app.bindAddToCartButtons = function(){
         'quantity' : e.currentTarget.parentElement.parentElement.querySelector(".menuQty").value
       };
       app.client.request(undefined,'api/carts/items/add','PUT',undefined,payloadObject,function(statusCode,responsePayload){
-        console.log(statusCode);
+        window.location = '/cart/edit';
       });
     });
   }
 };
 
-    // Stop if from redirecting
-  //e.preventDefault();
+// Bind the update cart buttons
+app.bindUpdateCartButtons = function(){
+  var ucButtons = document.getElementById("cartTable").querySelectorAll(".menuQty");
 
-    // Add item to cart
+  for(var i = 0; i < ucButtons.length; i++){
+    ucButtons[i].addEventListener("change", function(e){
+      // get the item number and quantity from other elements in the row
+      e.preventDefault();
+      var payloadObject = {
+        'phone' : e.currentTarget.parentElement.getAttribute("phone"),
+        'cartItemId' : e.currentTarget.parentElement.getAttribute("itemId"),
+        'quantity' : e.currentTarget.value
+      };
+      app.client.request(undefined,'api/carts/items/update','PUT',undefined,payloadObject,function(statusCode,responsePayload){
+        if(statusCode == 200){
+          location.reload();
+        } else {
+          // Display error message
+        }
+      });
+    });
+  }
+};
 
+// Bind the remove from cart buttons
+app.bindRemoveFromCartButtons = function(){
+  var ucButtons = document.getElementById("cartTable").querySelectorAll("#removeFromCartButton");
+
+  for(var i = 0; i < ucButtons.length; i++){
+    ucButtons[i].addEventListener("click", function(e){
+      // get the item number and quantity from other elements in the row
+      e.preventDefault();
+      var payloadObject = {
+        'phone' : e.currentTarget.parentElement.getAttribute("phone"),
+        'cartItemId' : e.currentTarget.parentElement.getAttribute("itemId"),
+      };
+      app.client.request(undefined,'api/carts/items/remove','PUT',undefined,payloadObject,function(statusCode,responsePayload){
+        if(statusCode == 200){
+          location.reload();
+        } else {
+          // Display error message
+        }
+      });
+    });
+  }
+};
 
 // Log the user out then redirect them
 app.logUserOut = function(redirectUser){
@@ -241,14 +282,14 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
       } else {
         // If successful, set the token and redirect the user
         app.setSessionToken(newResponsePayload);
-        window.location = '/checks/all';
+        window.location = '/menu';
       }
     });
   }
   // If login was successful, set the token in localstorage and redirect the user
   if(formId == 'sessionCreate'){
     app.setSessionToken(responsePayload);
-    window.location = '/checks/all';
+    window.location = '/menu';
   }
 
   // If forms saved successfully and they have success messages, show them
@@ -357,7 +398,6 @@ app.loadDataOnPage = function(){
   // Get the current page from the body class
   var bodyClasses = document.querySelector("body").classList;
   var primaryClass = typeof(bodyClasses[0]) == 'string' ? bodyClasses[0] : false;
-
   // Logic for account settings page
   if(primaryClass == 'accountEdit'){
     app.loadAccountEditPage();
@@ -365,6 +405,10 @@ app.loadDataOnPage = function(){
 
   if(primaryClass == 'menuList'){
     app.loadMenuListPage();
+  }
+
+  if(primaryClass == 'cartEdit'){
+    app.loadCartPage();
   }
 };
 
@@ -402,7 +446,7 @@ app.loadAccountEditPage = function(){
   }
 };
 
-// Load the dashboard page specifically
+// Load the menu page specifically
 app.loadMenuListPage = function(){
   // Get the phone number from the current token, or log the user out if none is there
   var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
@@ -427,6 +471,7 @@ app.loadMenuListPage = function(){
             var tr = table.insertRow(-1);
             tr.classList.add('menuRow');
             var td0 = tr.insertCell(0);
+            td0.classList.add('menuDescription');
             var td1 = tr.insertCell(1);
             var td2 = tr.insertCell(2);
             var td3 = tr.insertCell(3);
@@ -443,6 +488,86 @@ app.loadMenuListPage = function(){
           document.getElementById("noItemsMessage").style.display = 'block';
         }
         app.bindAddToCartButtons();
+      } else {
+        // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
+        app.logUserOut();
+      }
+    });
+  } else {
+    app.logUserOut();
+  }
+};
+
+// Load the shopping cart page specifically
+app.loadCartPage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  if(phone){
+    // Fetch the user data
+    var queryStringObject = {
+      'phone' : phone
+    };
+    app.client.request(undefined,'api/carts','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+
+      if(statusCode == 200){
+        var cart = typeof(responsePayload) == 'object' ? responsePayload : {};
+        var cartItems = [];
+        if(cart.hasOwnProperty('items')){
+          cartItems = cart['items'];
+        };
+        if(cartItems.length > 0){
+          // Get menu items so cart page can display descriptions
+          app.client.request(undefined,'api/menu','GET',undefined,undefined,function(statusCode,menuItemData){
+            if(statusCode == 200 && menuItemData){
+              var countOfItems = cartItems.length;
+              var count = 0;
+              cartItems.forEach(function(item){
+                count++;
+                //Create table row for each cart item
+                var table = document.getElementById("cartTable");
+                var tr = table.insertRow(-1);
+                tr.classList.add('cartRow');
+                var td0 = tr.insertCell(0);
+                td0.classList.add('menuDescription');
+                var td1 = tr.insertCell(1);
+                var td2 = tr.insertCell(2);
+                var td3 = tr.insertCell(3);
+                var td4 = tr.insertCell(4);
+                td2.setAttribute('itemId', item['id']);
+                td2.setAttribute('phone', phone);
+                td4.setAttribute('itemId', item['id']);
+                td4.setAttribute('phone', phone);
+                td0.innerHTML = menuItemData[item['menuItemId']]['description'];
+                td1.innerHTML = item['unitPrice'].toLocaleString("en-US", {style:"currency", currency:"USD"});
+                td2.innerHTML = 'Qty:<input type="number" name="quantity" class="menuQty" min="1" max="99" step="1" value="'+item['quantity']+'" />';
+                var subTotal = item['unitPrice'] * item['quantity'];
+                td3.innerHTML = subTotal.toLocaleString("en-US", {style:"currency", currency:"USD"});
+                td4.innerHTML = '<a href="#" id="removeFromCartButton">remove</a>';
+                if(count == countOfItems){
+                  var tr = table.insertRow(-1);
+                  tr.classList.add('cartTotalRow');
+                  var td0 = tr.insertCell(0);
+                  td0.classList.add('menuDescription');
+                  var td1 = tr.insertCell(1);
+                  td1.setAttribute("colspan", 2);
+                  td1.setAttribute("style" , "text-align:right;");
+                  var td2 = tr.insertCell(2);
+                  td0.innerHTML = '&nbsp;';
+                  td1.innerHTML = 'Total Price';
+                  td2.innerHTML = cart['totalPrice'].toLocaleString("en-US", {style:"currency", currency:"USD"});
+                  app.bindUpdateCartButtons();
+                  app.bindRemoveFromCartButtons();
+                }
+              });
+            } else {
+              // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down)
+              // app.logUserOut();
+              console.log('something is wrong');
+            }
+          });
+        } else {
+          document.getElementById("noItemsMessage").style.display = 'block';
+        }
       } else {
         // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
         app.logUserOut();
