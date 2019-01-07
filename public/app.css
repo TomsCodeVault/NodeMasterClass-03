@@ -309,15 +309,12 @@ td a, td a:hover, td a:active{
   font-weight: bold;
 }
 
-#cartTable{
-  margin-bottom: 30px;
-}
-
 .cartTotalRow td{
   font-weight: bold;
 }
 
-#menuListTable{
+#menuListTable, #cartTable{
+  margin-bottom: 30px;
   border-collapse: collapse;
 }
 
