@@ -230,7 +230,7 @@ input,select,option {
   width: 100%;
 }
 
-#tosAgreement {
+#tosAgreement, #DateTime {
   width: auto;
   margin-right: 10px;
 }
@@ -310,6 +310,31 @@ td a, td a:hover, td a:active{
 }
 
 .cartTotalRow td{
+  font-weight: bold;
+}
+
+.orderTotal{
+  margin: 10px auto 30px auto;
+  font-size: 125%;
+  font-weight: bold;
+}
+
+.timeWrapper input, .timeWrapper select{
+  width: 50px;
+}
+
+#dateInput{
+  width:auto;
+}
+
+.dateControls{
+  padding: 10px;
+  margin: 10px 0 20px 0;
+}
+
+#orderPrice{
+  margin: 0 10px;
+  font-size: 125%;
   font-weight: bold;
 }
 
