@@ -162,6 +162,14 @@ app.bindRemoveFromCartButtons = function(){
   }
 };
 
+app.bindDateTimeCheckBox = function(){
+  var dateTimeChk = document.getElementById("dateTimeChk");
+  dateTimeChk.addEventListener('change', function(e){
+    var dateControls = document.querySelector(".dateControls");
+    dateControls.disabled = !dateControls.disabled;
+  });
+};
+
 // Log the user out then redirect them
 app.logUserOut = function(redirectUser){
   // Set redirectUser to default to true
@@ -410,6 +418,10 @@ app.loadDataOnPage = function(){
   if(primaryClass == 'cartEdit'){
     app.loadCartPage();
   }
+
+  if(primaryClass == 'orderCreate'){
+    app.loadOrderCreatePage();
+  }
 };
 
 // Load the account edit page specifically
@@ -577,6 +589,80 @@ app.loadCartPage = function(){
     app.logUserOut();
   }
 };
+
+// Load the order create page specifically
+app.loadOrderCreatePage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  if(phone){
+    var queryStringObject = {
+      'phone' : phone
+    };
+    // Get the total price from the cart
+    app.client.request(undefined,'api/carts','GET',queryStringObject,undefined,function(statusCode,cartData){
+      if(statusCode == 200){
+        var totalPrice = cartData.totalPrice;
+
+        // Fetch the user data
+        app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+          if(statusCode == 200){
+            // Put the data into the forms as values where needed
+            document.querySelector("#orderPrice").innerHTML = totalPrice.toLocaleString("en-US", {style:"currency", currency:"USD"});
+            // document.querySelector("#accountEdit1 .lastNameInput").value = responsePayload.lastName;
+            document.querySelector(".displayPhoneInput").value = app._formatPhoneNumber(responsePayload.phone);
+            document.querySelector(".emailInput").value = responsePayload.email;
+            // document.querySelector("#accountEdit1 .addressInput").value = responsePayload.address;
+
+            // Put the hidden phone field into both forms
+            var hiddenPhoneInput = document.querySelector("input.hiddenPhoneNumberInput");
+            hiddenPhoneInput.value = responsePayload.phone;
+
+          } else {
+            // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
+            app.logUserOut();
+          }
+        });
+        app.bindDateTimeCheckBox();
+        app.setDateToToday();
+      }
+    });
+  } else {
+    app.logUserOut();
+  }
+};
+
+// format the 10 digit phone number for display as (000) 111-2222
+app._formatPhoneNumber = function(phoneNumber){
+  if(phoneNumber.length == 10){
+    var match = phoneNumber.match(/^(\d{3})(\d{3})(\d{4})$/)
+    if (match) {
+      return '(' + match[1] + ') ' + match[2] + '-' + match[3]
+    } else {
+      return phoneNumber;
+    }
+  } else {
+    return phoneNumber;
+  }
+};
+
+// set the date field to today's date
+app.setDateToToday = function() {
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+    var yyyy = today.getFullYear();
+
+    if(dd<10){
+        dd='0'+dd;
+    }
+    if(mm<10){
+        mm='0'+mm;
+    }
+
+    today = yyyy+'-'+mm+'-'+dd;
+    document.getElementById("dateInput").defaultValue =today+"";
+    // set the min and max values
+}
 
 // Init (bootstrapping)
 app.init = function(){

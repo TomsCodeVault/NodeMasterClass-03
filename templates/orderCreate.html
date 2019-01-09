@@ -4,7 +4,7 @@
 
 <div class="formWrapper">
   <div class="orderTotal">
-    Order Total: <span id="orderPrice">$55.00</span><a href="cart/edit">details</a>
+    Order Total: <span id="orderPrice"></span><a href="cart/edit">details</a>
   </div>
 
   <form id="orderInfo" action="/api/users" method="PUT">
@@ -16,12 +16,12 @@
       <div class="inputLabel">Delivery Address</div>
       <input class="addressInput" type="text" name="address" placeholder="Street, City, State, Zip" />
     </div>
-    <input type="checkbox" id="DateTime" /> Request a specific delivery date and time
+    <input type="checkbox" id="dateTimeChk" /> Request a specific delivery date and time (within the next 48 hours)
     <fieldset class="dateControls" disabled>
     <div class="timeWrapper">
       Date:
       <input id="dateInput" type="date" name="deliveryDate" min="2019-01-07" />
-      Hour:
+      Time:
       <select name="hour">
         <option value="1">01</option>
         <option value="2">02</option>
@@ -34,12 +34,12 @@
         <option value="9">09</option>
         <option value="10">10</option>
         <option value="11">11</option>
-        <option value="12">12</option>
+        <option value="12" selected="selected">12</option>
       </select>
-      Minute:
+      :
       <select name="minute">
-        <option value="0">00</option>
-        <option value="5">05</option>
+        <option value="00">00</option>
+        <option value="05">05</option>
         <option value="10">10</option>
         <option value="15">15</option>
         <option value="20">20</option>
@@ -63,11 +63,11 @@
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Name on Credit Card</div>
-      <input class="ccNameInput" type="text" name="nameOnCard" placeholder="John" />
+      <input class="ccNameInput" type="text" name="ccName" placeholder="John A Doe" />
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Credit Card Number</div>
-      <input class="lastNameInput" type="text" name="ccNumber" placeholder="Smith" />
+      <input class="ccNumberInput" type="text" name="ccNumber" placeholder="0000 1111 2222 3333" />
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Email</div>

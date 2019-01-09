@@ -230,7 +230,7 @@ input,select,option {
   width: 100%;
 }
 
-#tosAgreement, #DateTime {
+#tosAgreement, #dateTimeChk {
   width: auto;
   margin-right: 10px;
 }
@@ -325,6 +325,7 @@ td a, td a:hover, td a:active{
 
 #dateInput{
   width:auto;
+  margin-right: 10px;
 }
 
 .dateControls{
