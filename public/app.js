@@ -162,12 +162,19 @@ app.bindRemoveFromCartButtons = function(){
   }
 };
 
-app.bindDateTimeCheckBox = function(){
+app.bindDateTimeControls = function(){
   var dateTimeChk = document.getElementById("dateTimeChk");
   dateTimeChk.addEventListener('change', function(e){
     var dateControls = document.querySelector(".dateControls");
     dateControls.disabled = !dateControls.disabled;
   });
+  var dtControls = document.querySelectorAll(".timeWrapper .datePartControl");
+  for(var i = 0; i < dtControls.length; i++){
+    dtControls[i].addEventListener("change", function(e){
+      alert("change date");
+    })
+  }
+
 };
 
 // Log the user out then redirect them
@@ -616,14 +623,13 @@ app.loadOrderCreatePage = function(){
             // Put the hidden phone field into both forms
             var hiddenPhoneInput = document.querySelector("input.hiddenPhoneNumberInput");
             hiddenPhoneInput.value = responsePayload.phone;
-
           } else {
             // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
             app.logUserOut();
           }
         });
-        app.bindDateTimeCheckBox();
-        app.setDateToToday();
+        app.bindDateTimeControls();
+        app.setDateControls();
       }
     });
   } else {
@@ -646,11 +652,12 @@ app._formatPhoneNumber = function(phoneNumber){
 };
 
 // set the date field to today's date
-app.setDateToToday = function() {
-    var today = new Date();
-    var dd = today.getDate();
-    var mm = today.getMonth()+1; //January is 0!
-    var yyyy = today.getFullYear();
+app.setDateControls = function() {
+  // initialize date control
+    var defaultDate = new Date(Date.now() + 60 * 60 * 1000);
+    var dd = defaultDate.getDate();
+    var mm = defaultDate.getMonth()+1; //January is 0!
+    var yyyy = defaultDate.getFullYear();
 
     if(dd<10){
         dd='0'+dd;
@@ -662,6 +669,20 @@ app.setDateToToday = function() {
     today = yyyy+'-'+mm+'-'+dd;
     document.getElementById("dateInput").defaultValue =today+"";
     // set the min and max values
+
+    // get the various date values and initialize the date control values with defaults
+    var hours = defaultDate.getHours();
+    var minutes = defaultDate.getMinutes();
+    var am_pm = hours >= 12 ? 1 : 0;
+    hours = hours > 12 ? hours - 12 : hours;
+    if(hours == 0){ hours = 12;}
+    if(hours < 10){hours = "0"+hours;}
+    console.log(hours);
+    document.getElementById("hourControl").selectedIndex = hours - 1;
+    document.getElementById("minuteControl").selectedIndex = Math.floor(minutes/5);
+    document.getElementById("am_pmControl").selectedIndex = am_pm;
+    var hiddenDateInput = document.querySelector("input.hiddenDateInput");
+    hiddenDateInput.value = new Date(defaultDate).toISOString();
 }
 
 // Init (bootstrapping)
