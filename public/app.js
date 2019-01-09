@@ -168,14 +168,18 @@ app.bindDateTimeControls = function(){
     var dateControls = document.querySelector(".dateControls");
     dateControls.disabled = !dateControls.disabled;
   });
-  var dtControls = document.querySelectorAll(".timeWrapper .datePartControl");
-  for(var i = 0; i < dtControls.length; i++){
-    dtControls[i].addEventListener("change", function(e){
-      alert("change date");
-    })
-  }
-
 };
+
+app._createDateFromControls = function(){
+  var date = document.getElementById("dateInput").value;
+  var hours = document.getElementById("hourControl").value;
+  var minutes = document.getElementById("minuteControl").value;
+  var am_pm = document.getElementById("am_pmControl").value;
+  hours = hours == 12 ? "00" : hours;
+  hours = am_pm == 'pm' && hours < 12 ? parseInt(hours) + 12 : hours;
+  newDate = new Date(date+' '+hours+':'+minutes);
+  return Date.parse(newDate);
+}
 
 // Log the user out then redirect them
 app.logUserOut = function(redirectUser){
@@ -214,6 +218,27 @@ app.bindForms = function(){
         var formId = this.id;
         var path = this.action;
         var method = this.method.toUpperCase();
+
+        // Validate delivery date on order form before submitting
+        if(formId == 'orderInfo'){
+          // If user is requesting a specific date and time, make sure it's within allowable range
+          if(document.getElementById("dateTimeChk").checked){
+            var newDate = app._createDateFromControls();
+            var newDateString = (new Date(newDate)).toISOString();
+            var hiddenDate = document.querySelector(".hiddenDateInput");
+            var originalDate = hiddenDate.value;
+            var allowableLeadTime = 48 * 60 * 60 * 1000; // @TODO get allowable value from config options
+            // Controls are rounded down to 5 minute intervals so allow them to be up to 5 minutes earlier than the hidden date field
+            var originalDateMS = Date.parse(originalDate) - 300000;
+            if(newDate - allowableLeadTime > originalDateMS || newDate < originalDateMS){
+              alert("Too far in the future or too early");
+            } else {
+              hiddenDate.value = newDateString;
+            }
+            console.log(newDateString+' - '+originalDate);
+          }
+          return false;
+        }
 
         // Hide the error message (if it's currently shown due to a previous error)
         document.querySelector("#"+formId+" .formError").style.display = 'none';
@@ -667,7 +692,7 @@ app.setDateControls = function() {
     }
 
     today = yyyy+'-'+mm+'-'+dd;
-    document.getElementById("dateInput").defaultValue =today+"";
+    document.getElementById("dateInput").defaultValue = today+"";
     // set the min and max values
 
     // get the various date values and initialize the date control values with defaults
@@ -677,7 +702,6 @@ app.setDateControls = function() {
     hours = hours > 12 ? hours - 12 : hours;
     if(hours == 0){ hours = 12;}
     if(hours < 10){hours = "0"+hours;}
-    console.log(hours);
     document.getElementById("hourControl").selectedIndex = hours - 1;
     document.getElementById("minuteControl").selectedIndex = Math.floor(minutes/5);
     document.getElementById("am_pmControl").selectedIndex = am_pm;
