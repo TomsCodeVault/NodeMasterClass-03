@@ -18,7 +18,8 @@
     </div>
     <input type="checkbox" id="dateTimeChk" /> Request a specific delivery date and time (within the next 48 hours)
     <fieldset class="dateControls" disabled>
-    <div class="timeWrapper">
+    <div class="timeWrapper" dateMax="{date.max}">
+      <div class="formError"></div>
       Date:
       <input id="dateInput" type="date" name="deliveryDate" class="datePartControl" />
       Time:

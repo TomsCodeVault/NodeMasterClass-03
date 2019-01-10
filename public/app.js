@@ -181,6 +181,34 @@ app._createDateFromControls = function(){
   return Date.parse(newDate);
 }
 
+app._validateDeliveryDate = function(formId){
+  var newDate = app._createDateFromControls();
+  if(!newDate){
+    // Set the formError field with the error text and display it
+    var errorDisplay = document.querySelector("#"+formId+" .formError");
+    errorDisplay.innerHTML = "Invalid date value";
+    errorDisplay.style.display = "block";
+    return false;
+  }
+  var newDateString = (new Date(newDate)).toISOString();
+  var hiddenDate = document.querySelector(".hiddenDateInput");
+  var originalDate = hiddenDate.value;
+  var leadTime = document.querySelector(".timeWrapper").getAttribute("dateMax");
+  var allowableLeadTime = 60 * 60 * 1000 * leadTime;
+  // Controls are rounded down to 5 minute intervals so allow them to be up to 5 minutes earlier than the hidden date field
+  var originalDateMS = Date.parse(originalDate) - 300000;
+  if(newDate - allowableLeadTime > originalDateMS || newDate < originalDateMS){
+    // Set the formError field with the error text and display it
+    var errorDisplay = document.querySelector("#"+formId+" .formError");
+    errorDisplay.innerHTML = "Delivery date but be between 1 and "+leadTime+" hours from now";
+    errorDisplay.style.display = "block";
+    return false;
+  } else {
+    hiddenDate.value = newDateString;
+    return originalDate;
+  }
+}
+
 // Log the user out then redirect them
 app.logUserOut = function(redirectUser){
   // Set redirectUser to default to true
@@ -223,21 +251,11 @@ app.bindForms = function(){
         if(formId == 'orderInfo'){
           // If user is requesting a specific date and time, make sure it's within allowable range
           if(document.getElementById("dateTimeChk").checked){
-            var newDate = app._createDateFromControls();
-            var newDateString = (new Date(newDate)).toISOString();
-            var hiddenDate = document.querySelector(".hiddenDateInput");
-            var originalDate = hiddenDate.value;
-            var allowableLeadTime = 48 * 60 * 60 * 1000; // @TODO get allowable value from config options
-            // Controls are rounded down to 5 minute intervals so allow them to be up to 5 minutes earlier than the hidden date field
-            var originalDateMS = Date.parse(originalDate) - 300000;
-            if(newDate - allowableLeadTime > originalDateMS || newDate < originalDateMS){
-              alert("Too far in the future or too early");
-            } else {
-              hiddenDate.value = newDateString;
+            var preservedOriginalDate = app._validateDeliveryDate(formId);
+            if(!preservedOriginalDate){
+              return false;
             }
-            console.log(newDateString+' - '+originalDate);
           }
-          return false;
         }
 
         // Hide the error message (if it's currently shown due to a previous error)
@@ -277,6 +295,10 @@ app.bindForms = function(){
               app.logUserOut();
 
             } else {
+              // If hidden date input was changed, change it back or validation won't work right
+              if(preservedOriginalDate){
+                document.querySelector(".hiddenDateInput").value = preservedOriginalDate;
+              }
 
               // Try to get the error from the api, or set a default error message
               var error = typeof(responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
@@ -640,10 +662,8 @@ app.loadOrderCreatePage = function(){
           if(statusCode == 200){
             // Put the data into the forms as values where needed
             document.querySelector("#orderPrice").innerHTML = totalPrice.toLocaleString("en-US", {style:"currency", currency:"USD"});
-            // document.querySelector("#accountEdit1 .lastNameInput").value = responsePayload.lastName;
             document.querySelector(".displayPhoneInput").value = app._formatPhoneNumber(responsePayload.phone);
             document.querySelector(".emailInput").value = responsePayload.email;
-            // document.querySelector("#accountEdit1 .addressInput").value = responsePayload.address;
 
             // Put the hidden phone field into both forms
             var hiddenPhoneInput = document.querySelector("input.hiddenPhoneNumberInput");
@@ -679,34 +699,45 @@ app._formatPhoneNumber = function(phoneNumber){
 // set the date field to today's date
 app.setDateControls = function() {
   // initialize date control
-    var defaultDate = new Date(Date.now() + 60 * 60 * 1000);
-    var dd = defaultDate.getDate();
-    var mm = defaultDate.getMonth()+1; //January is 0!
-    var yyyy = defaultDate.getFullYear();
+  var dateInput = document.getElementById("dateInput");
 
-    if(dd<10){
-        dd='0'+dd;
-    }
-    if(mm<10){
-        mm='0'+mm;
-    }
+  var defaultDate = new Date(Date.now() + 60 * 60 * 1000);
+  var dd = defaultDate.getDate();
+  var mm = defaultDate.getMonth()+1; //January is 0!
+  var yyyy = defaultDate.getFullYear();
+  if(dd < 10){ dd='0'+dd }
+  if(mm < 10){ mm='0'+mm }
 
-    today = yyyy+'-'+mm+'-'+dd;
-    document.getElementById("dateInput").defaultValue = today+"";
-    // set the min and max values
+  var today = yyyy+'-'+mm+'-'+dd;
 
-    // get the various date values and initialize the date control values with defaults
-    var hours = defaultDate.getHours();
-    var minutes = defaultDate.getMinutes();
-    var am_pm = hours >= 12 ? 1 : 0;
-    hours = hours > 12 ? hours - 12 : hours;
-    if(hours == 0){ hours = 12;}
-    if(hours < 10){hours = "0"+hours;}
-    document.getElementById("hourControl").selectedIndex = hours - 1;
-    document.getElementById("minuteControl").selectedIndex = Math.floor(minutes/5);
-    document.getElementById("am_pmControl").selectedIndex = am_pm;
-    var hiddenDateInput = document.querySelector("input.hiddenDateInput");
-    hiddenDateInput.value = new Date(defaultDate).toISOString();
+  dateInput.defaultValue = today;
+  // Set the min attribute on the date input
+  dateInput.setAttribute("min", today);
+
+  // Set max attribute for the date input
+  var leadTime = document.querySelector(".timeWrapper").getAttribute("dateMax");
+  maxDate = new Date(Date.now() + 1000 * 60 * 60 * leadTime);
+  var mxdd = maxDate.getDate();
+  var mxmm = maxDate.getMonth()+1; //January is 0!
+  var mxyyyy = maxDate.getFullYear();
+  if(mxdd < 10){ mxdd='0'+mxdd }
+  if(mxmm < 10){ mxmm='0'+mxmm }
+
+  var maxDateString = mxyyyy+'-'+mxmm+'-'+mxdd;
+  dateInput.setAttribute("max", maxDateString);
+
+  // get the various date values and initialize the date control values with defaults
+  var hours = defaultDate.getHours();
+  var minutes = defaultDate.getMinutes();
+  var am_pm = hours >= 12 ? 1 : 0;
+  hours = hours > 12 ? hours - 12 : hours;
+  if(hours == 0){ hours = 12;}
+  if(hours < 10){hours = "0"+hours;}
+  document.getElementById("hourControl").selectedIndex = hours - 1;
+  document.getElementById("minuteControl").selectedIndex = Math.floor(minutes/5);
+  document.getElementById("am_pmControl").selectedIndex = am_pm;
+  var hiddenDateInput = document.querySelector("input.hiddenDateInput");
+  hiddenDateInput.value = new Date(defaultDate).toISOString();
 }
 
 // Init (bootstrapping)
