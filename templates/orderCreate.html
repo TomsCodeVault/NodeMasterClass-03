@@ -13,7 +13,7 @@
     <input class="hiddenPhoneNumberInput"  type="hidden" name="phone" />
     <div class="inputWrapper">
       <div class="inputLabel">Delivery Address</div>
-      <input class="addressInput" type="text" name="address" placeholder="Street, City, State, Zip" />
+      <input class="addressInput" type="text" name="deliveryAddress" placeholder="Street, City, State, Zip" />
     </div>
     <input type="checkbox" id="dateTimeChk" name="dateRequested" /> Request a specific delivery date and time (within the next 48 hours)
     <fieldset class="dateControls" disabled>
@@ -64,11 +64,11 @@
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Name on Credit Card</div>
-      <input class="ccNameInput" type="text" name="ccName" placeholder="John A Doe" />
+      <input class="ccNameInput" type="text" name="ccName" placeholder="John A Doe" required />
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Credit Card Number</div>
-      <input class="ccNumberInput" type="text" name="ccNumber" placeholder="0000 1111 2222 3333" />
+      <input class="ccNumberInput" type="text" name="ccNumber" placeholder="0000 1111 2222 3333" required />
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Email</div>
