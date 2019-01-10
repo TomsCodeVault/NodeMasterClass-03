@@ -209,6 +209,7 @@ app._validateDeliveryDate = function(formId){
     return false;
   } else {
     hiddenDate.value = newDateString;
+    // return the original date in case the form needs to be reset later 
     return originalDate;
   }
 }
