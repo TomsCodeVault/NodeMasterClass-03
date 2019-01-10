@@ -167,6 +167,10 @@ app.bindDateTimeControls = function(){
   dateTimeChk.addEventListener('change', function(e){
     var dateControls = document.querySelector(".dateControls");
     dateControls.disabled = !dateControls.disabled;
+    var datePartControls = dateControls.querySelectorAll(".datePartControl")
+    for(var i = 0; i < datePartControls.length; i++){
+      datePartControls[i].disabled = !datePartControls[i].disabled;
+    }
   });
 };
 
@@ -247,6 +251,7 @@ app.bindForms = function(){
         var path = this.action;
         var method = this.method.toUpperCase();
 
+
         // Validate delivery date on order form before submitting
         if(formId == 'orderInfo'){
           // If user is requesting a specific date and time, make sure it's within allowable range
@@ -272,15 +277,17 @@ app.bindForms = function(){
         var elements = this.elements;
         for(var i = 0; i < elements.length; i++){
           if(elements[i].type !== 'submit'){
-            var valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
-            if(elements[i].name == '_method'){
-              method = valueOfElement;
-            } else {
-              payload[elements[i].name] = valueOfElement;
+            if(!elements[i].disabled){
+              var valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
+              if(elements[i].name == '_method'){
+                method = valueOfElement;
+              } else {
+                payload[elements[i].name] = valueOfElement;
+              }
             }
-
           }
         }
+        console.log(formId+' '+path+' '+method);
 
         // If the method is DELETE, turn payload into queryStringObject
         var queryStringObject = method == 'DELETE' ? payload : {};
