@@ -8,8 +8,7 @@ var app = {};
 
 // Config
 app.config = {
-  'sessionToken' : false,
-  'orderId' : false
+  'sessionToken' : false
 };
 
 // AJAX Client (for RESTful API)
@@ -378,7 +377,6 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
   // If the user placed an order, redirect them to a thank you page
   if(formId == 'orderInfo'){
     if(responsePayload.orderId){
-      alert(responsePayload.orderId);
       window.location = '/order/created?orderId='+responsePayload.orderId;
     } else {
       window.location = '/menu';
@@ -415,14 +413,6 @@ app.setLoggedInClass = function(add){
     target.classList.remove('loggedIn');
   }
 };
-
-app.setOrderId = function(orderId){
-  if(orderId){
-    app.config.orderId = orderId;
-  } else {
-    app.config.orderId = false;
-  }
-}
 
 // Set the session token in the app.config object as well as localstorage
 app.setSessionToken = function(token){
@@ -502,10 +492,6 @@ app.loadDataOnPage = function(){
 
   if(primaryClass == 'orderCreate'){
     app.loadOrderCreatePage();
-  }
-
-  if(primaryClass == 'orderCreated'){
-    app.loadOrderCreatedPage();
   }
 };
 
@@ -711,32 +697,6 @@ app.loadOrderCreatePage = function(){
   } else {
     app.logUserOut();
   }
-};
-
-// Load the order created page
-app.loadOrderCreatedPage = function(){
-  // Display the appropriate message and bind the view details button
-  if(app.config.orderId){
-    var queryStringObject = {
-      'orderId' : app.config.orderId
-    }
-  }
-  // Get the delivery date from the order data
-  var messageString = '';
-  app.client.request(undefined,'api/orders','GET',queryStringObject,undefined,function(statusCode,responsePayload){
-    var deliveryDate = typeof(responsePayload.deliveryDate) == 'string' && responsePayload.deliveryDate.length > 0 ? responsePayload.deliveryDate : false;
-    if(statusCode == 200 && deliveryDate){
-      if(deliveryDate == "N/A"){
-        messageString = "We've got your order and will be making your pizza shortly. Please allow 45 to 60 minutes for delivery.";
-      } else {
-        messageString = "Your pizza is scheduled for delivery for "+deliveryDate+". We look forward to seeing you then.";
-      }
-    } else {
-      messageString = "We are not able to retrieve details from your order. Please call us."
-    }
-    document.querySelector(".delivery-statement").innerHTML = messageString;
-  });
-  app.setOrderId(false);
 };
 
 // format the 10 digit phone number for display as (000) 111-2222
