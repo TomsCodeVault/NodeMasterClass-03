@@ -381,7 +381,7 @@ app.formResponseProcessor = function(formId,requestPayload,responsePayload){
     } else {
       window.location = '/menu';
     }
-  };
+  }
 
 };
 
@@ -492,6 +492,10 @@ app.loadDataOnPage = function(){
 
   if(primaryClass == 'orderCreate'){
     app.loadOrderCreatePage();
+  }
+
+  if(primaryClass == 'orderCreated'){
+    app.loadOrderCreatedPage();
   }
 };
 
@@ -697,6 +701,16 @@ app.loadOrderCreatePage = function(){
   } else {
     app.logUserOut();
   }
+};
+
+// Load the order created (thank you) page specifically
+app.loadOrderCreatedPage = function(){
+  // Bind the order detail button's click event
+  document.getElementById("orderDetailButton").addEventListener('click', function(e){
+    e.preventDefault();
+    var orderId = e.currentTarget.getAttribute("orderId")
+    window.location = "order/detail?orderId="+orderId;
+  });
 };
 
 // format the 10 digit phone number for display as (000) 111-2222
