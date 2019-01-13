@@ -409,8 +409,22 @@ app.setLoggedInClass = function(add){
   var target = document.querySelector("body");
   if(add){
     target.classList.add('loggedIn');
+    // If there are items in the cart, show cart menu item
+    var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+    if(phone){
+      // Fetch the user data
+      var queryStringObject = {
+        'phone' : phone
+      };
+      app.client.request(undefined,'api/carts','GET',queryStringObject,undefined,function(statusCode,responsePayload){
+        if(statusCode == 200 && responsePayload.items.length > 0){
+          target.classList.add('notEmpty');
+        }
+      });
+    }
   } else {
     target.classList.remove('loggedIn');
+    target.classList.remove('notEmpty');
   }
 };
 
@@ -497,6 +511,14 @@ app.loadDataOnPage = function(){
   if(primaryClass == 'orderCreated'){
     app.loadOrderCreatedPage();
   }
+
+  if(primaryClass == 'orderDetail'){
+    app.loadOrderDetailPage();
+  }
+
+  if(primaryClass == 'orderHistory'){
+    app.loadOrderHistoryPage();
+  }
 };
 
 // Load the account edit page specifically
@@ -537,51 +559,118 @@ app.loadAccountEditPage = function(){
 app.loadMenuListPage = function(){
   // Get the phone number from the current token, or log the user out if none is there
   var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  var loggedIn = false;
+  if(phone){
+    loggedIn = true;
+  }
+  // Get menu items
+  app.client.request(undefined,'api/menu','GET',undefined,undefined,function(statusCode,responsePayload){
+    if(statusCode == 200){
+
+      // Determine how many checks the user has
+      var menu = typeof(responsePayload) == 'object' ? responsePayload : {};
+      var itemCounter = 0; // use to test for empty menu
+      // Show each menu item as a new row in the table
+      for(var key in menu){
+        if(menu.hasOwnProperty(key)){
+          itemCounter++;
+          var menuItem = menu[key];
+          // Create table row for each menu item
+          var table = document.getElementById("menuListTable");
+          var tr = table.insertRow(-1);
+          tr.classList.add('menuRow');
+          var td0 = tr.insertCell(0);
+          td0.classList.add('menuDescription');
+          var td1 = tr.insertCell(1);
+          var td2 = tr.insertCell(2);
+          var td3 = tr.insertCell(3);
+          td3.setAttribute('itemId', menuItem['id']);
+          td3.setAttribute('phone', phone);
+          td0.innerHTML = menuItem['description'];
+          td1.innerHTML = menuItem['price'].toLocaleString("en-US", {style:"currency", currency:"USD"});
+          td2.innerHTML = 'Qty:<input type="number" name="quantity" class="menuQty" min="1" max="99" step="1" value="1" />';
+          if(loggedIn){
+            td3.innerHTML = '<a href="#" id="addToCartButton">add to cart</a>';
+          } else {
+            td3.innerHTML = 'login to order';
+          }
+        }
+      }
+      if(itemCounter == 0){
+        // Show 'you have no checks' message
+        document.getElementById("noItemsMessage").style.display = 'table-row';
+      }
+      if(loggedIn){
+        app.bindAddToCartButtons();
+      }      
+    } else {
+      // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
+      app.logUserOut();
+    }
+  });
+};
+
+// Load the order history page specifically
+app.loadOrderHistoryPage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
   if(phone){
     // Fetch the user data
     var queryStringObject = {
       'phone' : phone
     };
-    app.client.request(undefined,'api/menu','GET',undefined,undefined,function(statusCode,responsePayload){
+    app.client.request(undefined,'api/users','GET',queryStringObject,undefined,function(statusCode,responsePayload){
       if(statusCode == 200){
 
         // Determine how many checks the user has
-        var menu = typeof(responsePayload) == 'object' ? responsePayload : {};
-        var itemCounter = 0; // use to test for empty menu
-        // Show each menu item as a new row in the table
-        for(var key in menu){
-          if(menu.hasOwnProperty(key)){
-            itemCounter++;
-            var menuItem = menu[key];
-            // Create table row for each menu item
-            var table = document.getElementById("menuListTable");
-            var tr = table.insertRow(-1);
-            tr.classList.add('menuRow');
-            var td0 = tr.insertCell(0);
-            td0.classList.add('menuDescription');
-            var td1 = tr.insertCell(1);
-            var td2 = tr.insertCell(2);
-            var td3 = tr.insertCell(3);
-            td3.setAttribute('itemId', menuItem['id']);
-            td3.setAttribute('phone', phone);
-            td0.innerHTML = menuItem['description'];
-            td1.innerHTML = menuItem['price'].toLocaleString("en-US", {style:"currency", currency:"USD"});
-            td2.innerHTML = 'Qty:<input type="number" name="quantity" class="menuQty" min="1" max="99" step="1" value="1" />';
-            td3.innerHTML = '<a href="#" id="addToCartButton">add to cart</a>';
+        var user = typeof(responsePayload) == 'object' ? responsePayload : {};
+        var orders = [];
+        if(user.hasOwnProperty('orders')){
+          orders = user['orders'];
+        }
+        if(orders.length > 0){
+          orders.sort(function(a,b){return(a-b)});
+          for(var i = 0; i < orders.length; i++){
+          // get order information from order file
+            var orderQueryStringObject = {
+              'orderId' : orders[i]
+            };
+            app.client.request(undefined,'api/orders','GET',orderQueryStringObject,undefined,function(statusCode,orderData){
+              if(statusCode == 200){
+                // Create table row for this order
+                var table = document.getElementById("orderListTable");
+                var tr = table.insertRow(-1);
+                tr.classList.add('orderRow');
+                var td0 = tr.insertCell(0);
+                var td1 = tr.insertCell(1);
+                var td2 = tr.insertCell(2);
+                var td3 = tr.insertCell(3);
+                td0.innerHTML = '<a href="order/detail?orderId='+orderData.orderId+'">'+orderData.orderId+'</a>';
+                var dateInMS = (new Date(orderData.orderDate)).getTime();
+                var timezoneOffset = (new Date(dateInMS)).getTimezoneOffset();
+                var localShortDate = new Date(dateInMS + (timezoneOffset * 60 * 1000)).toLocaleDateString();
+                td1.innerHTML = localShortDate;
+                td2.innerHTML = orderData.deliveryAddress;
+                td3.innerHTML = orderData.totalPrice.toLocaleString("en-US", {style:"currency", currency:"USD"});
+              } else {
+                var table = document.getElementById("orderListTable");
+                var tr = table.insertRow(-1);
+                var td0 = tr.insertCell(0);
+                td0.setAttribute('colspan', 4);
+                td0.innerHTML = "Error retrieving order information";
+              }
+            });
           }
+        } else {
+            document.getElementById("noItemsMessage").style.display = 'table-row';
         }
-        if(itemCounter == 0){
-          // Show 'you have no checks' message
-          document.getElementById("noItemsMessage").style.display = 'block';
-        }
-        app.bindAddToCartButtons();
       } else {
-        // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
-        app.logUserOut();
+          // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
+        //app.logUserOut();
       }
     });
   } else {
-    app.logUserOut();
+    //app.logUserOut();
   }
 };
 
@@ -646,6 +735,7 @@ app.loadCartPage = function(){
                   app.bindRemoveFromCartButtons();
                 }
               });
+              document.getElementById("checkoutButton").setAttribute('href', 'order/create');
             } else {
               // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down)
               // app.logUserOut();
@@ -653,7 +743,7 @@ app.loadCartPage = function(){
             }
           });
         } else {
-          document.getElementById("noItemsMessage").style.display = 'block';
+          document.getElementById("noItemsMessage").style.display = 'table-row';
         }
       } else {
         // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
@@ -711,6 +801,95 @@ app.loadOrderCreatedPage = function(){
     var orderId = e.currentTarget.getAttribute("orderId")
     window.location = "order/detail?orderId="+orderId;
   });
+};
+
+app.loadOrderDetailPage = function(){
+  // Get the phone number from the current token, or log the user out if none is there
+  var phone = typeof(app.config.sessionToken.phone) == 'string' ? app.config.sessionToken.phone : false;
+  var orderId = document.querySelector(".orderHeader").getAttribute("dataOrderNumber");
+  if(phone && orderId){
+    var queryStringObject = {
+      'orderId' : orderId
+    };
+    // Get the total price from the cart
+    app.client.request(undefined,'api/orders','GET',queryStringObject,undefined,function(statusCode,orderData){
+      if(statusCode == 200){
+        // Check if order belongs to the logged in user. If not, log the user out.
+        if(orderData.phone == phone){
+          // populate fields in template
+          document.getElementById("orderNumberDisplay").innerHTML = orderId;
+          document.getElementById("orderNameDisplay").innerHTML = orderData.userName;
+          var dateInMS = (new Date(orderData.orderDate)).getTime();
+          var timezoneOffset = (new Date(dateInMS)).getTimezoneOffset();
+          var localShortDate = new Date(dateInMS + (timezoneOffset * 60 * 1000)).toLocaleDateString();
+          document.getElementById("orderDateDisplay").innerHTML = localShortDate;
+          document.getElementById("orderAddressDisplay").innerHTML = orderData.deliveryAddress;
+          document.getElementById("orderDeliveryDateDisplay").innerHTML = orderData.deliveryDate;
+          // Populate order item table
+          var orderItems = [];
+          if(orderData.hasOwnProperty('items')){
+            orderItems = orderData['items'];
+          };
+          if(orderItems.length > 0){
+            // Get menu items so cart page can display descriptions
+            app.client.request(undefined,'api/menu','GET',undefined,undefined,function(statusCode,menuItemData){
+              if(statusCode == 200 && menuItemData){
+                var countOfItems = orderItems.length;
+                var count = 0;
+                orderItems.forEach(function(item){
+                  count++;
+                  //Create table row for each cart item
+                  var table = document.getElementById("orderItemTable");
+                  var tr = table.insertRow(-1);
+                  tr.classList.add('orderRow');
+                  var td0 = tr.insertCell(0);
+                  td0.classList.add('orderItemQty');
+                  var td1 = tr.insertCell(1);
+                  td1.classList.add('menuDescription');
+                  var td2 = tr.insertCell(2);
+                  var td3 = tr.insertCell(3);
+                  td0.innerHTML = item['quantity'];
+                  td1.innerHTML = menuItemData[item['menuItemId']]['description'];
+                  td2.innerHTML = item['unitPrice'].toLocaleString("en-US", {style:"currency", currency:"USD"});
+                  var subTotal = item['unitPrice'] * item['quantity'];
+                  td3.innerHTML = subTotal.toLocaleString("en-US", {style:"currency", currency:"USD"});
+                  if(count == countOfItems){
+                    var tr = table.insertRow(-1);
+                    tr.classList.add('cartTotalRow');
+                    var td0 = tr.insertCell(0);
+                    td0.classList.add('menuDescription');
+                    var td1 = tr.insertCell(1);
+                    td1.setAttribute("colspan", 2);
+                    td1.setAttribute("style" , "text-align:right;");
+                    var td2 = tr.insertCell(2);
+                    td0.innerHTML = '&nbsp;';
+                    td1.innerHTML = 'Total Price';
+                    td2.innerHTML = orderData['totalPrice'].toLocaleString("en-US", {style:"currency", currency:"USD"});
+                  }
+                });
+              } else {
+                // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down)
+                // app.logUserOut();
+                console.log('something is wrong');
+              }
+            });
+          } else {
+            document.getElementById("noItemsMessage").style.display = 'table-row';
+          }
+        } else {
+          // If the request comes back as something other than 200, log the user out (on the assumption that the api is temporarily down or the users token is bad)
+          console.log("1 "+statusCode);
+          // app.logUserOut();
+        }
+      } else {
+        console.log("2 "+statusCode);
+        // app.logUserOut();
+      }
+    });
+  } else {
+    console.log("missing required date");
+    // app.logUserOut();
+  }
 };
 
 // format the 10 digit phone number for display as (000) 111-2222

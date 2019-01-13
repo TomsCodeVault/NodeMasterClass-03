@@ -70,12 +70,20 @@ body {
   display: none;
 }
 
+.header ul li.notEmpty{
+  display: none;
+}
+
 body.loggedIn .header ul li.loggedIn{
   display: inline-block;
 }
 
 body.loggedIn .header ul li.loggedOut{
   display: none;
+}
+
+body.notEmpty .header ul li.notEmpty{
+  display: inline-block;
 }
 
 .header .logo{
@@ -305,7 +313,6 @@ td a, td a:hover, td a:active{
 }
 
 .menuDescription{
-  width: 70%;
   font-weight: bold;
 }
 
@@ -317,6 +324,15 @@ td a, td a:hover, td a:active{
   margin: 10px auto 30px auto;
   font-size: 125%;
   font-weight: bold;
+}
+
+#orderItemTable th {
+  text-align: left;
+}
+
+#orderItemTable tr:nth-child(even),
+#orderListTable tr:nth-child(even) {
+  background-color: #f2f2f2;
 }
 
 .timeWrapper input, .timeWrapper select{
@@ -333,13 +349,36 @@ td a, td a:hover, td a:active{
   margin: 10px 0 20px 0;
 }
 
+.orderHeader{
+  margin-bottom: 20px;
+  float: left;
+}
+
+.orderHeader div{
+  float: left;
+  font-size: 125%;
+  margin: 5px 0;
+}
+
+.orderDetailLabel{
+  text-align: right;
+  width: 150px;
+  clear: left;
+  font-weight: bold;
+}
+
+.orderDetailDisplay{
+  padding-left: 10px;
+  text-align: left;
+}
+
 #orderPrice{
   margin: 0 10px;
   font-size: 125%;
   font-weight: bold;
 }
 
-#menuListTable, #cartTable{
+#menuListTable, #cartTable, #orderItemTable, #orderListTable{
   margin-bottom: 30px;
   border-collapse: collapse;
 }
