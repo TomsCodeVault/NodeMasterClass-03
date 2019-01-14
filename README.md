@@ -13,7 +13,7 @@ Before you can place an order you will need to add some information to the confi
 
 # Testing the gui application #
 
-To start, clone this project to you local machine, fill in the fields in the config.js file and start the server. Then, open a browser and go to localhost.com.
+To start, clone this project to your local machine, fill in the fields in the config.js file and start the server. Then, open a browser and go to localhost.com.
 
 The application will allow you to:
 
