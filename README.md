@@ -1,13 +1,32 @@
-# NodeMasterClass-03
+# NodeMasterClass-03 #
 Node.js Master Class Homework Assignment #3
 
 # GUI for Pizza Delivery API #
 
-This api serves as the backend for a pizza delivery company. It allows users to be created, edited and deleted. Those users can add, remove and edit items from their shopping cart and then place an order by checking out. The api integrates with the stripe.com api and the mailgun api to accept payments and email receipts.
+For this homework assignment, I've created a frontend application that relies on the api that was built in the previous assignment.
 
-## Testing the API ##
+In order to fully test the this frontend application you will need to initialize the api by providing Stripe and Mailgun credentials as described below.
+
+## Initializing the API ##
 
 Before you can place an order you will need to add some information to the config.js file. Open the config.js file for editing and fill in the areas between the `<>` symbols with your stripe.com and mailgun credentials.
+
+# Testing the gui application #
+
+To start, clone this project to you local machine, fill in the fields in the config.js file and start the server. Then, open a browser and go to localhost.com.
+
+The application will allow you to:
+
+- Create a user account
+- Edit your user account
+- Delete your user account
+- Login
+- Logout
+- Add menu items to your shopping cart
+- Review and edit your cart
+- Place and order (checkout)
+- Review your order history
+
 
 ### Create a user ###
 
