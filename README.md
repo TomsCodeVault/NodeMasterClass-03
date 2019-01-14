@@ -25,7 +25,7 @@ The application will allow you to:
 - View the menu
 - Add menu items to your shopping cart
 - Review and edit your cart
-- Place and order (checkout)
+- Place an order (checkout)
 - Review your order history
 
-The application should be fairly intuitive. The menu can be accessed whether or not you are logged in but items can only be added to the cart if you are logged in. When placing an order, you can specify a delivery date and time within a window of time determined by the allowableLeadTime property in the config file. I find working with date in javascript to be somewhat challenging. This assignment gave me some good practice.
+The application should be fairly intuitive. The menu can be accessed whether or not you are logged in but items can only be added to the cart if you are logged in. When placing an order, you can specify a delivery date and time within a window of time determined by the allowableLeadTime property in the config file. I find working with dates in javascript to be somewhat challenging. This assignment gave me some good practice.
